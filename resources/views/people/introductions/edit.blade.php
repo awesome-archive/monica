@@ -35,7 +35,7 @@
             <h2>{{ trans('people.introductions_title_edit', ['name' => $contact->first_name]) }}</h2>
 
               <form method="POST" action="{{ route('people.introductions.update', $contact) }}">
-                {{ csrf_field() }}
+                @csrf
 
                 @include('partials.errors')
 
@@ -49,7 +49,7 @@
                   <label for="metThroughId">{{ trans('people.introductions_edit_met_through') }}</label>
                   <select class="form-control" name="metThroughId" id="metThroughId">
                     <option value="">{{ trans('people.introductions_no_met_through') }}</option>
-                    @foreach (auth()->user()->account->contacts()->real()->active()->get() as $metThroughContact)
+                    @foreach ($contacts as $metThroughContact)
 
                       @if ($metThroughContact->id != $contact->id)
                       <option value="{{ $metThroughContact->id }}" {{ (is_null($contact->first_met_through_contact_id)) ? '' : (($metThroughContact->id == $contact->first_met_through_contact_id) ? 'selected' : '') }}>

@@ -53,11 +53,11 @@ SONAR_ORGANIZATION=monicahq
 
 function installSonar {
   echo '== Setup sonar scanner'
-  
+
   # set version of sonar scanner to use :
   sonarversion=${SONAR_VERSION:-}
   if [ -z "${sonarversion:-}" ]; then
-    sonarversion=3.3.0.1492
+    sonarversion=4.3.0.2102
   fi
   echo "== Using sonarscanner $sonarversion"
 
@@ -70,12 +70,17 @@ function installSonar {
       wget --quiet --continue https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$sonarversion.zip
       unzip -q sonar-scanner-cli-$sonarversion.zip
       rm sonar-scanner-cli-$sonarversion.zip
-    else    
+    else
       wget --quiet --continue https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$sonarversion-linux.zip
       unzip -q sonar-scanner-cli-$sonarversion-linux.zip
       rm sonar-scanner-cli-$sonarversion-linux.zip
       mv sonar-scanner-$sonarversion-linux sonar-scanner-$sonarversion
     fi
+  else
+    pushd sonar-scanner-$sonarversion > /dev/null
+    chmod a+x bin/sonar-scanner
+    test -f jre/bin/java && chmod a+x jre/bin/java
+    popd > /dev/null
   fi
   export SONAR_SCANNER_HOME=$HOME/sonarscanner/sonar-scanner-$sonarversion
   export PATH=$SONAR_SCANNER_HOME/bin:$PATH
@@ -117,7 +122,7 @@ function gitFetch {
 }
 
 function getSonarlauncher {
-  sonarlauncherversion=0.6.0
+  sonarlauncherversion=0.7.0
   mkdir -p ~/sonarlauncher
   pushd ~/sonarlauncher > /dev/null
   if [ ! -d "$sonarlauncherversion" ]; then
@@ -156,7 +161,7 @@ elif [ -n "${BRANCH:-}" ] && [ "$PR_NUMBER" == "false" ] && [ -n "${SONAR_TOKEN:
 
   SONAR_PARAMS="$(CommonParams) \
     -Dsonar.projectVersion=$(php artisan monica:getversion)"
-  
+
   echo "# sonar-scanner $SONAR_PARAMS"
   $SONAR_SCANNER_HOME/bin/sonar-scanner $SONAR_PARAMS -Dsonar.login=$SONAR_TOKEN
   exit $?

@@ -5,6 +5,7 @@ namespace App\Services\Contact\Contact;
 use Illuminate\Support\Arr;
 use App\Services\BaseService;
 use App\Models\Contact\Contact;
+use App\Jobs\Avatars\GenerateDefaultAvatar;
 
 class UpdateContact extends BaseService
 {
@@ -47,7 +48,7 @@ class UpdateContact extends BaseService
      * @param array $data
      * @return Contact
      */
-    public function execute(array $data) : Contact
+    public function execute(array $data): Contact
     {
         $this->validate($data);
 
@@ -59,8 +60,6 @@ class UpdateContact extends BaseService
         $this->updateBirthDayInformation($data, $contact);
 
         $this->updateDeceasedInformation($data, $contact);
-
-        $contact->updateGravatar();
 
         // we query the DB again to fill the object with all the new properties
         $contact->refresh();
@@ -97,7 +96,14 @@ class UpdateContact extends BaseService
             ]
         );
 
+        $oldName = $contact->name;
+
         $contact->update($dataOnly);
+
+        // only update the avatar if the name has changed
+        if ($oldName != $contact->name) {
+            GenerateDefaultAvatar::dispatch($contact);
+        }
     }
 
     /**
@@ -119,6 +125,7 @@ class UpdateContact extends BaseService
             'is_age_based' => $this->nullOrvalue($data, 'birthdate_is_age_based'),
             'age' => $this->nullOrvalue($data, 'birthdate_age'),
             'add_reminder' => $this->nullOrvalue($data, 'birthdate_add_reminder'),
+            'is_deceased' => $data['is_deceased'],
         ]);
     }
 
